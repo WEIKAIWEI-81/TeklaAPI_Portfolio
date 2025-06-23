@@ -36,12 +36,11 @@ namespace TrueDreams_BIM_TeklaAPI
         {
             Form3 f3 = new Form3();
             f3.Show();
-            f3.newtext((DateTime.Now.ToShortTimeString()) + "　　===開始執行自動建立柱底版===");
-            if (mymodel.GetConnectionStatus()) //判斷是否有連動到模型
+            f3.newtext((DateTime.Now.ToShortTimeString()) + "　　===柱底プレートの自動作成を開始===");
+            if (mymodel.GetConnectionStatus()) // モデルとの連動を確認
             {
-
                 ModelObjectEnumerator more = mymodel.GetModelObjectSelector().GetAllObjectsWithType(ModelObject.ModelObjectEnum.BEAM);
-                Detail d1 = new Detail(); //細部接頭               
+                Detail d1 = new Detail(); // 詳細接線
 
                 progressBar1.Visible = true;
                 progressBar1.Maximum = more.GetSize();
@@ -51,27 +50,25 @@ namespace TrueDreams_BIM_TeklaAPI
 
                 foreach (Tekla.Structures.Model.Object obj in more)
                 {
-                   Beam b1 = obj as Beam;
+                    Beam b1 = obj as Beam;
+                    if (b1.Name == "COLUMN")
+                    {
+                        string pro = b1.Profile.ProfileString;
+                        d1.Name = "ecsk_base_plate2"; // 接線名称を指定
+                        d1.Number = 90001019; // 接線番号を指定
+                        d1.LoadAttributesFromFile(pro);
 
-                        if (b1.Name == "COLUMN")
+                        d1.UpVector = new Vector(0, 0, 1000);
+                        d1.DetailType = Tekla.Structures.DetailTypeEnum.END;
+                        d1.SetPrimaryObject(b1);
+                        d1.SetReferencePoint(b1.StartPoint);
+                        d1.Class = 99;
+                        d1.Code = "D19";
+                        bool result = d1.Insert();
+                        if (!result)
                         {
-                            string pro = b1.Profile.ProfileString;
-                            d1.Name = "ecsk_base_plate2"; //指定接頭名稱
-                            d1.Number = 90001019; //指定接頭號碼
-                            d1.LoadAttributesFromFile(pro);
-                            
-                            d1.UpVector = new Vector(0, 0, 1000);
-                            d1.DetailType = Tekla.Structures.DetailTypeEnum.END;
-                            d1.SetPrimaryObject(b1);
-                            d1.SetReferencePoint(b1.StartPoint);
-                            d1.Class = 99;
-                            d1.Code = "D19";
-                            bool result = d1.Insert();
-                        if (!result) { 
-                            
-                            f3.newtext((DateTime.Now.ToShortTimeString()) + "　　joint 無法執行!"); 
-                        
-                         }
+                            f3.newtext((DateTime.Now.ToShortTimeString()) + "　　接線の実行に失敗!");
+                        }
                         else
                         {
                             z++;
@@ -79,16 +76,15 @@ namespace TrueDreams_BIM_TeklaAPI
                     }
 
                     progressBar1.Value += progressBar1.Step;
-
                 }
-                f3.newtext((DateTime.Now.ToShortTimeString()) + "　　" + z + "個接頭程式已執行!");
-                f3.newtext((DateTime.Now.ToShortTimeString()) + "　　===程式執行完成===");
+                f3.newtext((DateTime.Now.ToShortTimeString()) + "　　" + z + "個の接線が実行されました!");
+                f3.newtext((DateTime.Now.ToShortTimeString()) + "　　===プログラムの実行終了===");
                 progressBar1.Visible = false;
                 mymodel.CommitChanges();
             }
             else
             {
-                MessageBox.Show("未開啟TEKLA模型");
+                MessageBox.Show("TEKLAモデルが開いていません");
             }
         }
 
@@ -96,7 +92,7 @@ namespace TrueDreams_BIM_TeklaAPI
         {
             Form3 f3 = new Form3();
             f3.Show();
-            f3.newtext((DateTime.Now.ToShortTimeString()) + "　　===開始執行自動柱梁接頭===");
+            f3.newtext((DateTime.Now.ToShortTimeString()) + "　　===自動柱梁接合の実行を開始します===");
             ModelObjectEnumerator more = mymodel.GetModelObjectSelector().GetAllObjectsWithType(ModelObject.ModelObjectEnum.BEAM);
 
             progressBar1.Visible = true;
@@ -133,7 +129,7 @@ namespace TrueDreams_BIM_TeklaAPI
                                 myPlugin.SetSecondaryObject(mybeam);
                                 if (!myPlugin.Insert())
                                 {
-                                    f3.newtext((DateTime.Now.ToShortTimeString()) + "　　joint 無法執行!");
+                                    f3.newtext((DateTime.Now.ToShortTimeString()) + "　　ジョイントの実行に失敗しました！");
                                 }
                                 else
                                 {
@@ -141,22 +137,23 @@ namespace TrueDreams_BIM_TeklaAPI
                                 }
                             }
                         }
-                        
+
                     }
                 }
                 progressBar1.Value += progressBar1.Step;
             }
-            f3.newtext((DateTime.Now.ToShortTimeString()) + "　　" + z + "個接頭程式已執行!");
-            f3.newtext((DateTime.Now.ToShortTimeString()) + "　　===程式執行完成===");
+            f3.newtext((DateTime.Now.ToShortTimeString()) + "　　" + z + "個のジョイントを実行しました！");
+            f3.newtext((DateTime.Now.ToShortTimeString()) + "　　===プログラムの実行が完了しました===");
             progressBar1.Visible = false;
             mymodel.CommitChanges();
         }
+
 
         private void button3_Click(object sender, EventArgs e)
         {
             Form3 f3 = new Form3();
             f3.Show();
-            f3.newtext((DateTime.Now.ToShortTimeString()) + "　　===開始執行自動建立內隔版===");
+            f3.newtext((DateTime.Now.ToShortTimeString()) + "　　===自動内壁作成の実行を開始します===");
             ModelObjectEnumerator more = mymodel.GetModelObjectSelector().GetAllObjectsWithType(ModelObject.ModelObjectEnum.BEAM);
             ArrayList myarr = new ArrayList();
 
@@ -178,10 +175,9 @@ namespace TrueDreams_BIM_TeklaAPI
                     Tekla.Structures.Geometry3d.AABB MyAxisAlignedBoundingBox1 = new Tekla.Structures.Geometry3d.AABB(mypoint1, mypoint2);
                     Tekla.Structures.Model.ModelObjectEnumerator objEnum1 = mymodel.GetModelObjectSelector().GetObjectsByBoundingBox(MyAxisAlignedBoundingBox1.MinPoint, MyAxisAlignedBoundingBox1.MaxPoint);
 
-                   
                     ComponentInput CI = new ComponentInput();
 
-                    Tekla.Structures.Model.Component myPlugin2 = new Tekla.Structures.Model.Component();                    
+                    Tekla.Structures.Model.Component myPlugin2 = new Tekla.Structures.Model.Component();
                     myPlugin2.Number = 90000097;
                     myPlugin2.LoadAttributesFromFile("standard");
 
@@ -199,42 +195,38 @@ namespace TrueDreams_BIM_TeklaAPI
                         }
                     }
 
-                   
-
-
                     CI.AddInputObjects(myarr);
 
                     //MessageBox.Show(myBeamArr[i].StartPoint.ToString());                   
 
-                   /* string aa = "";
+                    /* string aa = "";
 
-                    foreach (Beam oobj in myarr)
-                    {
-                        aa = aa + oobj.Name.ToString() + "/n";
-                    }
+                     foreach (Beam oobj in myarr)
+                     {
+                         aa = aa + oobj.Name.ToString() + "/n";
+                     }
 
-                    MessageBox.Show(aa);*/
-
-
+                     MessageBox.Show(aa);*/
 
                     myPlugin2.SetComponentInput(CI);
                     z++;
                     if (!myPlugin2.Insert())
-                        f3.newtext((DateTime.Now.ToShortTimeString()) + "　　joint 無法執行!");
+                        f3.newtext((DateTime.Now.ToShortTimeString()) + "　　ジョイントの実行に失敗しました！");
                 }
                 progressBar1.Value += progressBar1.Step;
             }
-            f3.newtext((DateTime.Now.ToShortTimeString()) + "　　" + z + "個程式已執行!");
-            f3.newtext((DateTime.Now.ToShortTimeString()) + "　　===程式執行完成===");
+            f3.newtext((DateTime.Now.ToShortTimeString()) + "　　" + z + "個の処理を実行しました！");
+            f3.newtext((DateTime.Now.ToShortTimeString()) + "　　===プログラムの実行が完了しました===");
             progressBar1.Visible = false;
             mymodel.CommitChanges();
         }
+
 
         private void button4_Click(object sender, EventArgs e)
         {
             Form3 f3 = new Form3();
             f3.Show();
-            f3.newtext((DateTime.Now.ToShortTimeString()) + "　　===開始執行偏移歸零===");
+            f3.newtext((DateTime.Now.ToShortTimeString()) + "　　===オフセットをゼロにリセット開始===");
             ModelObjectEnumerator more = mymodel.GetModelObjectSelector().GetAllObjectsWithType(ModelObject.ModelObjectEnum.BEAM);
 
             progressBar1.Visible = true;
@@ -246,7 +238,7 @@ namespace TrueDreams_BIM_TeklaAPI
             foreach (Tekla.Structures.Model.Object obj in more)
             {
                 Beam b1 = obj as Beam;
-                if ((Math.Abs(b1.StartPointOffset.Dz - b1.EndPointOffset.Dz) < 1 ) && b1.StartPointOffset.Dz != 0)
+                if ((Math.Abs(b1.StartPointOffset.Dz - b1.EndPointOffset.Dz) < 1) && b1.StartPointOffset.Dz != 0)
                 {
                     double off = b1.StartPointOffset.Dz;
 
@@ -260,25 +252,23 @@ namespace TrueDreams_BIM_TeklaAPI
 
                     b1.Modify();
                     Operation.MoveObject(b1, vector);
-
-                    
                 }
                 progressBar1.Value += progressBar1.Step;
             }
-            f3.newtext((DateTime.Now.ToShortTimeString()) + "　　" + z + "個動作已執行!");
-            f3.newtext((DateTime.Now.ToShortTimeString()) + "　　===程式執行完成===");
+            f3.newtext((DateTime.Now.ToShortTimeString()) + "　　" + z + "個の処理を実行しました！");
+            f3.newtext((DateTime.Now.ToShortTimeString()) + "　　===プログラムの実行が完了しました===");
             progressBar1.Visible = false;
             mymodel.CommitChanges();
         }
+
 
         private void button5_Click(object sender, EventArgs e)
         {
             Form3 f3 = new Form3();
             f3.Show();
-            f3.newtext((DateTime.Now.ToShortTimeString()) + "　　===開始執行柱自動顏色分類===");
+            f3.newtext((DateTime.Now.ToShortTimeString()) + "　　===柱の自動色分けを開始します===");
             ModelObjectEnumerator more = mymodel.GetModelObjectSelector().GetAllObjectsWithType(ModelObject.ModelObjectEnum.BEAM);
             ModelObjectEnumerator more2 = mymodel.GetModelObjectSelector().GetAllObjectsWithType(ModelObject.ModelObjectEnum.BEAM);
-
 
             progressBar1.Visible = true;
             progressBar1.Maximum = more.GetSize();
@@ -287,80 +277,62 @@ namespace TrueDreams_BIM_TeklaAPI
 
             int i = 1;
             bool skip = false;
-
             List<String> slist = new List<string>();
 
             foreach (Tekla.Structures.Model.Object obj in more)
-            {                
+            {
                 if (i > 14) { i = 1; }
                 skip = false;
                 Beam b1 = obj as Beam;
-               // MessageBox.Show(skip.ToString());
+
                 if (b1.Name.Contains("COLUMN") == true)
                 {
-                   // MessageBox.Show(skip.ToString());
                     foreach (string test in slist)
                     {
-
                         if (test == b1.Profile.ProfileString)
                         {
                             skip = true;
-                            
                             break;
                         }
                         else
                         {
                             skip = false;
                         }
-
                     }
 
-                    if (skip == true)
-                    {
-
-                    }
-                    else
+                    if (!skip)
                     {
                         b1.Class = i.ToString();
                         b1.Modify();
                         foreach (Tekla.Structures.Model.Object obj2 in more2)
                         {
                             Beam b2 = obj2 as Beam;
-                            //MessageBox.Show(b1.Profile.ProfileString + "," + b2.Profile.ProfileString);
-
                             if (b2.Name.Contains("COLUMN") == true)
                             {
                                 if (b1.Profile.ProfileString == b2.Profile.ProfileString)
                                 {
-
-
                                     b2.Class = i.ToString();
-
                                     b2.Modify();
                                 }
                             }
                         }
                         i++;
                         slist.Add(b1.Profile.ProfileString);
-                        
                     }
                 }
                 more2.Reset();
                 progressBar1.Value += progressBar1.Step;
             }
 
-
-
-            f3.newtext((DateTime.Now.ToShortTimeString()) + "　　===程式執行完成===");
+            f3.newtext((DateTime.Now.ToShortTimeString()) + "　　===プログラムの実行が完了しました===");
             progressBar1.Visible = false;
             mymodel.CommitChanges();
         }
-
         private void button6_Click(object sender, EventArgs e)
         {
             Form3 f3 = new Form3();
             f3.Show();
-            f3.newtext((DateTime.Now.ToShortTimeString()) + "　　===開始執行梁自動顏色分類===");
+            f3.newtext((DateTime.Now.ToShortTimeString()) + "　　===梁の自動色分けを開始します===");
             ModelObjectEnumerator more = mymodel.GetModelObjectSelector().GetAllObjectsWithType(ModelObject.ModelObjectEnum.BEAM);
             ModelObjectEnumerator more2 = mymodel.GetModelObjectSelector().GetAllObjectsWithType(ModelObject.ModelObjectEnum.BEAM);
 
@@ -371,63 +343,47 @@ namespace TrueDreams_BIM_TeklaAPI
 
             int i = 1;
             bool skip = false;
-
             List<String> slist = new List<string>();
 
             foreach (Tekla.Structures.Model.Object obj in more)
             {
-                
                 if (i > 14) { i = 1; }
                 skip = false;
                 Beam b1 = obj as Beam;
-                // MessageBox.Show(skip.ToString());
+
                 if (b1.Name.Contains("BEAM") == true)
                 {
-                    // MessageBox.Show(skip.ToString());
                     foreach (string test in slist)
                     {
-
                         if (test == b1.Profile.ProfileString)
                         {
                             skip = true;
-
                             break;
                         }
                         else
                         {
                             skip = false;
                         }
-
                     }
 
-                    if (skip == true)
-                    {
-
-                    }
-                    else
+                    if (!skip)
                     {
                         b1.Class = i.ToString();
                         b1.Modify();
                         foreach (Tekla.Structures.Model.Object obj2 in more2)
                         {
                             Beam b2 = obj2 as Beam;
-                            //MessageBox.Show(b1.Profile.ProfileString + "," + b2.Profile.ProfileString);
-
                             if (b2.Name.Contains("BEAM") == true)
                             {
                                 if (b1.Profile.ProfileString == b2.Profile.ProfileString)
                                 {
-
-
                                     b2.Class = i.ToString();
-
                                     b2.Modify();
                                 }
                             }
                         }
                         i++;
                         slist.Add(b1.Profile.ProfileString);
-
                     }
                 }
                 more2.Reset();
@@ -440,17 +396,17 @@ namespace TrueDreams_BIM_TeklaAPI
                 k = k + "\n" + a;
             }
 
-
-            f3.newtext((DateTime.Now.ToShortTimeString()) + "　　===程式執行完成===");
+            f3.newtext((DateTime.Now.ToShortTimeString()) + "　　===プログラムの実行が完了しました===");
             progressBar1.Visible = false;
             mymodel.CommitChanges();
         }
+
 
         private void button7_Click(object sender, EventArgs e)
         {
             Form3 f3 = new Form3();
             f3.Show();
-            f3.newtext((DateTime.Now.ToShortTimeString()) + "　　===開始執行自動建立梁梁接頭===");
+            f3.newtext((DateTime.Now.ToShortTimeString()) + "　　===梁と梁の自動接合を開始します===");
             ModelObjectEnumerator more = mymodel.GetModelObjectSelector().GetAllObjectsWithType(ModelObject.ModelObjectEnum.BEAM);
             ModelObjectEnumerator more2 = mymodel.GetModelObjectSelector().GetAllObjectsWithType(ModelObject.ModelObjectEnum.BEAM);
 
@@ -468,58 +424,49 @@ namespace TrueDreams_BIM_TeklaAPI
             };
 
             foreach (Tekla.Structures.Model.Object obj in more)
-            {                
+            {
                 Beam b1 = obj as Beam;
                 int j = 0;
                 if (b1.Name == "BEAM")
                 {
                     Tekla.Structures.Model.Solid solid1 = b1.GetSolid();
-                    Tekla.Structures.Geometry3d.Point mypoint1 = new Tekla.Structures.Geometry3d.Point(solid1.MinimumPoint.X+100, solid1.MinimumPoint.Y+100, solid1.MinimumPoint.Z-100);
-                    Tekla.Structures.Geometry3d.Point mypoint2 = new Tekla.Structures.Geometry3d.Point(solid1.MaximumPoint.X-100, solid1.MaximumPoint.Y-100, solid1.MaximumPoint.Z+100);
+                    Tekla.Structures.Geometry3d.Point mypoint1 = new Tekla.Structures.Geometry3d.Point(solid1.MinimumPoint.X + 100, solid1.MinimumPoint.Y + 100, solid1.MinimumPoint.Z - 100);
+                    Tekla.Structures.Geometry3d.Point mypoint2 = new Tekla.Structures.Geometry3d.Point(solid1.MaximumPoint.X - 100, solid1.MaximumPoint.Y - 100, solid1.MaximumPoint.Z + 100);
                     Tekla.Structures.Geometry3d.AABB MyAxisAlignedBoundingBox1 = new Tekla.Structures.Geometry3d.AABB(mypoint1, mypoint2);
                     Tekla.Structures.Geometry3d.Point spoint;
                     Tekla.Structures.Geometry3d.Point epoint;
 
-
-
                     foreach (Tekla.Structures.Model.Object oobj in more2)
-                    {                     
-
+                    {
                         if (i == j)
                         {
                             j++;
                             continue;
                         }
-
                         else if (oobj is Beam)
                         {
                             Beam mybeam = oobj as Beam;
 
-
                             if (mybeam.Name == "BEAM")
                             {
-
                                 spoint = new Tekla.Structures.Geometry3d.Point(mybeam.StartPoint.X, mybeam.StartPoint.Y, mybeam.StartPoint.Z);
                                 epoint = new Tekla.Structures.Geometry3d.Point(mybeam.EndPoint.X, mybeam.EndPoint.Y, mybeam.EndPoint.Z);
 
-
                                 if (MyAxisAlignedBoundingBox1.IsInside(spoint) || MyAxisAlignedBoundingBox1.IsInside(epoint))
                                 {
-
-                                    string pro = mybeam.Profile.ProfileString;                                                                     
+                                    string pro = mybeam.Profile.ProfileString;
                                     myPlugin.LoadAttributesFromFile(pro);
                                     myPlugin.Class = 99;
                                     myPlugin.SetPrimaryObject(b1);
                                     myPlugin.SetSecondaryObject(mybeam);
                                     if (!myPlugin.Insert())
                                     {
-                                        f3.newtext((DateTime.Now.ToShortTimeString()) + "　　joint 無法執行!");
+                                        f3.newtext((DateTime.Now.ToShortTimeString()) + "　　ジョイントを作成できませんでした。");
                                     }
                                     else
                                     {
                                         z++;
                                     }
-
                                 }
                             }
                         }
@@ -530,12 +477,13 @@ namespace TrueDreams_BIM_TeklaAPI
                 i++;
                 more2.Reset();
             }
-            f3.newtext((DateTime.Now.ToShortTimeString()) + "　　" + z + "個接頭程式已執行!");
-            f3.newtext((DateTime.Now.ToShortTimeString()) + "　　===程式執行完成===");
+            f3.newtext((DateTime.Now.ToShortTimeString()) + "　　" + z + " 件の接合が完了しました！");
+            f3.newtext((DateTime.Now.ToShortTimeString()) + "　　===プログラムの実行が完了しました===");
             progressBar1.Visible = false;
-            
+
             mymodel.CommitChanges();
         }
+
 
         private void label1_Click(object sender, EventArgs e)
         {
@@ -546,7 +494,7 @@ namespace TrueDreams_BIM_TeklaAPI
         {
             Form3 f3 = new Form3();
             f3.Show();
-            f3.newtext((DateTime.Now.ToShortTimeString()) + "　　===開始計算大小梁數量===");
+            f3.newtext((DateTime.Now.ToShortTimeString()) + "　　===大梁・小梁の数量を計算開始==="); // 開始訊息
             ModelObjectEnumerator more = mymodel.GetModelObjectSelector().GetAllObjectsWithType(ModelObject.ModelObjectEnum.BEAM);
 
             progressBar1.Visible = true;
@@ -569,7 +517,7 @@ namespace TrueDreams_BIM_TeklaAPI
                     Tekla.Structures.Geometry3d.Point mypoint2 = new Tekla.Structures.Geometry3d.Point(solid1.MaximumPoint.X + 100, solid1.MaximumPoint.Y + 100, solid1.MaximumPoint.Z);
                     Tekla.Structures.Geometry3d.AABB MyAxisAlignedBoundingBox1 = new Tekla.Structures.Geometry3d.AABB(mypoint1, mypoint2);
                     Tekla.Structures.Model.ModelObjectEnumerator objEnum1 = mymodel.GetModelObjectSelector().GetObjectsByBoundingBox(MyAxisAlignedBoundingBox1.MinPoint, MyAxisAlignedBoundingBox1.MaxPoint);
-                    
+
                     foreach (Tekla.Structures.Model.Object oobj in objEnum1)
                     {
                         if (oobj is Beam)
@@ -583,7 +531,6 @@ namespace TrueDreams_BIM_TeklaAPI
                                 break;
                             }
                         }
-
                     }
 
                     if (skip_count == false)
@@ -591,20 +538,19 @@ namespace TrueDreams_BIM_TeklaAPI
                         b1.GetReportProperty("WEIGHT_NET", ref weight);
                         sum_s = sum_s + weight;
                     }
-
-
                 }
 
-               
                 skip_count = false;
                 progressBar1.Value += progressBar1.Step;
             }
-            f3.newtext((DateTime.Now.ToShortTimeString()) + "  大樑總共" + sum_b + "kg");
-            f3.newtext((DateTime.Now.ToShortTimeString()) + "  小樑總共" + sum_s + "kg");
-            f3.newtext((DateTime.Now.ToShortTimeString()) + "　　===程式執行完成===");
+
+            f3.newtext((DateTime.Now.ToShortTimeString()) + "  大梁の合計重量：" + sum_b + "kg");
+            f3.newtext((DateTime.Now.ToShortTimeString()) + "  小梁の合計重量：" + sum_s + "kg");
+            f3.newtext((DateTime.Now.ToShortTimeString()) + "　　===処理が完了しました===");
             progressBar1.Visible = false;
             mymodel.CommitChanges();
         }
+
 
         private void button9_Click(object sender, EventArgs e)
         {
