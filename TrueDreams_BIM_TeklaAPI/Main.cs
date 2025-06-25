@@ -18,13 +18,13 @@ namespace TrueDreams_BIM_TeklaAPI
 {
     public partial class Form1 : ApplicationFormBase
     {
-        private readonly Model mymodel; //事先宣告載入一個TEKLA模型
+        private readonly Model mymodel; 
       
         public Form1()
         {            
             InitializeComponent();
             base.InitializeForm();            
-            mymodel = new Model(); //表單開啟時針對模型做初始化
+            mymodel = new Model();
         }
 
         private void Form1_Load(object sender, EventArgs e)
@@ -32,22 +32,26 @@ namespace TrueDreams_BIM_TeklaAPI
 
         }
 
+        //柱脚ベースプレートの自動配置
         private void button1_Click(object sender, EventArgs e)
         {
             Form3 f3 = new Form3();
             f3.Show();
             f3.newtext((DateTime.Now.ToShortTimeString()) + "　　===柱底プレートの自動作成を開始===");
+           
             if (mymodel.GetConnectionStatus()) // モデルとの連動を確認
             {
                 ModelObjectEnumerator more = mymodel.GetModelObjectSelector().GetAllObjectsWithType(ModelObject.ModelObjectEnum.BEAM);
                 Detail d1 = new Detail(); // 詳細接線
 
+                //進捗バーの処理
                 progressBar1.Visible = true;
                 progressBar1.Maximum = more.GetSize();
                 progressBar1.Value = 0;
                 progressBar1.Step = 1;
                 int z = 0;
 
+                //要素が柱であるかを判定し、柱であれば該当する柱に接合部コンポーネントを追加する。
                 foreach (Tekla.Structures.Model.Object obj in more)
                 {
                     Beam b1 = obj as Beam;
@@ -95,6 +99,7 @@ namespace TrueDreams_BIM_TeklaAPI
             f3.newtext((DateTime.Now.ToShortTimeString()) + "　　===自動柱梁接合の実行を開始します===");
             ModelObjectEnumerator more = mymodel.GetModelObjectSelector().GetAllObjectsWithType(ModelObject.ModelObjectEnum.BEAM);
 
+            //進捗バーの処理
             progressBar1.Visible = true;
             progressBar1.Maximum = more.GetSize();
             progressBar1.Value = 0;
