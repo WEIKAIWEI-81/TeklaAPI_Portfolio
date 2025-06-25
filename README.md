@@ -27,8 +27,8 @@ Tekla の台湾向け専用ジョイントプログラムと連携し、以下�
 
 ## 📁 プロジェクト構成  
 TrueDreams_BIM_TeklaAPI
-<br>├── Form1.cs # メインプログラム
-<br>└── Form2.cs # 結果レポート作成プログラム
+<br>├── Main.cs # メインプログラム
+<br>└── MessageBox.cs # 結果レポート作成プログラム
 
 
 ---
